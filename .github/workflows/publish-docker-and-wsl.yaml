@@ -48,12 +48,12 @@ jobs:
         push: true
         tags: |
           ${{ steps.docker_meta.outputs.tags }}
-          opendronemap/odm:latest
+          omerfarukkalkan/odm:latest
     - name: Export WSL image
       id: wsl_export
       run: |
-        docker pull opendronemap/odm
-        docker export $(docker create opendronemap/odm) --output odm-wsl-rootfs-amd64.tar.gz
+        docker pull omerfarukkalkan/odm
+        docker export $(docker create omerfarukkalkan/odm) --output odm-wsl-rootfs-amd64.tar.gz
         gzip odm-wsl-rootfs-amd64.tar.gz
         echo ::set-output name=amd64-rootfs::"odm-wsl-rootfs-amd64.tar.gz"
     # Convert tag into a GitHub Release if we're building a tag
@@ -94,4 +94,4 @@ jobs:
     - name: Dispatch NodeODM Build Event
       id: nodeodm_dispatch
       run: |
-        curl -X POST -u "${{secrets.PAT_USERNAME}}:${{secrets.PAT_TOKEN}}" -H "Accept: application/vnd.github.everest-preview+json" -H "Content-Type: application/json" https://api.github.com/repos/OpenDroneMap/NodeODM/actions/workflows/publish-docker.yaml/dispatches --data '{"ref": "master"}'
+        curl -X POST -u "${{secrets.PAT_USERNAME}}:${{secrets.PAT_TOKEN}}" -H "Accept: application/vnd.github.everest-preview+json" -H "Content-Type: application/json" https://api.github.com/repos/omerkalkan/NodeODM/actions/workflows/publish-docker.yaml/dispatches --data '{"ref": "master"}'
