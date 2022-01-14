@@ -17,7 +17,7 @@ from opendm.cropper import Cropper
 from opendm import point_cloud
 from opendm.multispectral import get_primary_band_name
 from opendm.osfm import OSFMContext
-
+from opendm.boundary import as_polygon, export_to_bounds_files
 
 class ODMGeoreferencingStage(types.ODM_Stage):
     def process(self, args, outputs):
@@ -125,7 +125,7 @@ class ODMGeoreferencingStage(types.ODM_Stage):
                 if reconstruction.has_gcp() and io.file_exists(gcp_gml_export_file):
                     log.ODM_INFO("Embedding GCP info in point cloud")
                     params += [
-                        '--writers.las.vlrs="{\\\"filename\\\": \\\"%s\\\", \\\"user_id\\\": \\\"ODM_GCP\\\", \\\"description\\\": \\\"Ground Control Points (GML)\\\"}"' % gcp_gml_export_file
+                        '--writers.las.vlrs="{\\\"filename\\\": \\\"%s\\\", \\\"user_id\\\": \\\"ODM_GCP\\\", \\\"description\\\": \\\"Ground Control Points (GML)\\\"}"' % gcp_gml_export_file.replace(os.sep, "/")
                     ]
                 
                 system.run(cmd + ' ' + ' '.join(stages) + ' ' + ' '.join(params))
@@ -137,7 +137,7 @@ class ODMGeoreferencingStage(types.ODM_Stage):
                     cropper = Cropper(tree.odm_georeferencing, 'odm_georeferenced_model')
                     
                     if args.fast_orthophoto:
-                        decimation_step = 10
+                        decimation_step = 4
                     else:
                         decimation_step = 40
                     
@@ -152,6 +152,14 @@ class ODMGeoreferencingStage(types.ODM_Stage):
                     except:
                         log.ODM_WARNING("Cannot calculate crop bounds! We will skip cropping")
                         args.crop = 0
+                
+                if 'boundary' in outputs and args.crop == 0:
+                    log.ODM_INFO("Using boundary JSON as cropping area")
+                    
+                    bounds_base, _ = os.path.splitext(tree.odm_georeferencing_model_laz)
+                    bounds_json = bounds_base + ".bounds.geojson"
+                    bounds_gpkg = bounds_base + ".bounds.gpkg"
+                    export_to_bounds_files(outputs['boundary'], reconstruction.get_proj_srs(), bounds_json, bounds_gpkg)
             else:
                 log.ODM_INFO("Converting point cloud (non-georeferenced)")
                 system.run(cmd + ' ' + ' '.join(stages) + ' ' + ' '.join(params))
