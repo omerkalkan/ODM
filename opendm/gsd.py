@@ -4,7 +4,7 @@ import numpy as np
 import math
 from repoze.lru import lru_cache
 from opendm import log
-
+from opendm.shots import get_origin
 
 def rounded_gsd(reconstruction_json, default_value=None, ndigits=0, ignore_gsd=False):
     """
@@ -122,7 +122,8 @@ def opensfm_reconstruction_average_gsd(reconstruction_json, use_all_shots=False)
         shot = reconstruction['shots'][shotImage]
         if use_all_shots or shot['gps_dop'] < 999999:
             camera = reconstruction['cameras'][shot['camera']]
-            shot_height = shot['translation'][2]
+            shot_origin = get_origin(shot)
+            shot_height = shot_origin[2]
             focal_ratio = camera.get('focal', camera.get('focal_x'))
             if not focal_ratio:
                 log.ODM_WARNING("Cannot parse focal values from %s. This is likely an unsupported camera model." % reconstruction_json)
